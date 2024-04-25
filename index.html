@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Photo Library Collage</title>
+  </head>
+  <body>
+    <div class="header">
+      <h1 class="header-text">Photo Library Collage</h1>
+    </div>
+    <div class="container">
+      <div class="item item--scrollable">
+        <div class="thumbnails"></div>
+      </div>
+      <div class="item">
+        <div>
+          <div class="action">
+            <select class="select"></select>
+            <button class="btn btn--primary btn-create-collage">
+              Create collage
+            </button>
+            <button class="btn btn--secondary btn-start-over">
+              Start over
+            </button>
+            <button
+              class="btn btn--success btn-download"
+              onClick="{downloadCollage}"
+            >
+              Download
+            </button>
+          </div>
+          <div class="previewContainer">
+            <div class="spinerContainer spinerContainer--hidden ">
+                <div class="spinner"></div>
+                <p class="spinnerText"></p>
+            </div>
+            <canvas class="canvas"></canvas>
+        </div>
+        <div class="loggerContainer">
+            <p class="logger-title">Logger</p>
+        </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="index.js"></script>
+
+  </body>
+</html>
