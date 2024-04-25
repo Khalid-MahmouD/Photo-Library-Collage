@@ -198,12 +198,13 @@ export const images = [
 export const THUMBNAIL_PARAMS = "w=240&h=240&fit=crop&auto=format";
 
 // Console styles.
-export const CONSOL_BASE_STYLES = [
+export const CONSOLE_BASE_STYLES = [
   "font-size: 12px",
   "padding: 4px",
   "border: 2px solid #5a5a5a",
   "color: white",
 ].join(";");
+
 
 export const CONSOLE_PRIMARY = [
   CONSOLE_BASE_STYLES,
@@ -222,9 +223,9 @@ export const CONSOLE_ERROR = [
 
 // Layouts.
 export const LAYOUT_4_COLUMNS = {
-  name: "Layouts 4 columns",
+  name: "Layout 4 columns",
   columns: 4,
-  itemWidth: 244,
+  itemWidth: 240,
   itemHeight: 240,
 };
 
@@ -238,11 +239,11 @@ export const LAYOUT_8_COLUMNS = {
 export const LAYOUTS = [LAYOUT_4_COLUMNS, LAYOUT_8_COLUMNS];
 
 export const createImageFile = async (src) =>
-  new Promise((resole, reject) => {
+  new Promise((resolve, reject) => {
     const img = new Image();
     img.src = src;
     img.onload = () => resolve(img);
-    img.onerror = (err) => reject(new Error("Failed to construct image"));
+    img.onerror = () => reject(new Error("Failed to construct image."));
   });
 
 export const loadImage = async (url) => {
@@ -251,32 +252,35 @@ export const loadImage = async (url) => {
     if (!response.ok) {
       throw new Error(String(response.status));
     }
+
     return await response.blob();
-  } catch (err) {
-    console.log(`%cFETCHED_FAILED: ${err}`, CONSOLE_ERROR);
+  } catch (e) {
+    console.log(`%cFETCHED_FAILED: ${e}`, CONSOLE_ERROR);
   }
 };
 
 export const weakRefCache = (fetchImg) => {
-  const imgCashe = new Map();
+  const imgCache = new Map();
   const registry = new FinalizationRegistry(({ imgName, size, type }) => {
-    const cachedImg = imgCashe.get(imgName);
+    const cachedImg = imgCache.get(imgName);
     if (cachedImg && !cachedImg.deref()) {
-      imgCashe.delete(imgName);
+      imgCache.delete(imgName);
       console.log(
         `%cCLEANED_IMAGE: Url: ${imgName}, Size: ${size}, Type: ${type}`,
         CONSOLE_ERROR
       );
+
       const logEl = document.createElement("div");
       logEl.classList.add("logger-item", "logger--error");
-      logEl.innerHTML = `CLEANED IMAGE: IRL: ${imgName}, Size: ${size}, Type: ${type}`;
+      logEl.innerHTML = `CLEANED_IMAGE: Url: ${imgName}, Size: ${size}, Type: ${type}`;
       loggerContainerEl.appendChild(logEl);
       loggerContainerEl.scrollTop = loggerContainerEl.scrollHeight;
     }
   });
 
   return async (imgName) => {
-    const cachedImg = imgCashe.get(imgName);
+    const cachedImg = imgCache.get(imgName);
+
     if (cachedImg?.deref() !== undefined) {
       console.log(
         `%cCACHED_IMAGE: Url: ${imgName}, Size: ${cachedImg.size}, Type: ${cachedImg.type}`,
@@ -291,23 +295,26 @@ export const weakRefCache = (fetchImg) => {
 
       return cachedImg?.deref();
     }
+
     const newImg = await fetchImg(imgName);
     console.log(
       `%cFETCHED_IMAGE: Url: ${imgName}, Size: ${newImg.size}, Type: ${newImg.type}`,
       CONSOLE_PRIMARY
     );
+
     const logEl = document.createElement("div");
     logEl.classList.add("logger-item", "logger--primary");
     logEl.innerHTML = `FETCHED_IMAGE: Url: ${imgName}, Size: ${newImg.size}, Type: ${newImg.type}`;
     loggerContainerEl.appendChild(logEl);
     loggerContainerEl.scrollTop = loggerContainerEl.scrollHeight;
 
-    imgCashe.set(imgName, newImg);
+    imgCache.set(imgName, new WeakRef(newImg));
     registry.register(newImg, {
       imgName,
       size: newImg.size,
       type: newImg.type,
     });
+
     return newImg;
   };
 };
